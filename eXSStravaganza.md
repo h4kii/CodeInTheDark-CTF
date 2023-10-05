@@ -61,5 +61,25 @@ So I used this payload:
 ```
 Here you can find the explanation of [call() function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call) and [Template Literals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals)
 
+# Level 6 
+Sanitizer :
+```javascript
+function sanitize(input) {
+    // no symbols whatsoever! good luck!
+    const sanitized = input.replace(/[[|\s+*/<>\\&^:;=`'~!%-]/g, '');
+    return "  \x3Cscript\x3E\nvar name=\"" + sanitized + "\";\ndocument.body.innerText=name;\n  \x3C/script\x3E";
+}
+```
+In this case our input is sanitized by a regex (which removes most of the special characters) and is inserted inside `var name=" "`\
+We can use double quotes to escape the string and insert a payload to trigger the alert, there could be more ways to do it but I used a `Function()` object by calling it with the prototype `constructor`\
+![](./images/xss1.png)
+`"a".constructor.constructor(alert(1))` is like `Function(alert(1))`\
+At this point we could use the slash `/` to comment out the remaining part, but the regex filters the `/` character and after some research I found a javascript operator called nullish coalescing (`??`) operator \
+So the payload becomes: 
+```javascript
+a".constructor.constructor(alert(1))??"
+```
+
+(Here you can find the explanation of [Function()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function) , [Object.prototype.constructor](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/constructor) and [Nullish coalescing operator ??](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_coalescing) )
 
 
