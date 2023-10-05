@@ -72,7 +72,7 @@ function sanitize(input) {
 ```
 In this case our input is sanitized by a regex (which removes most of the special characters) and is inserted inside `var name=" "`\
 We can use double quotes to escape the string and insert a payload to trigger the alert, there could be more ways to do it but I used a `Function()` object by calling it with the prototype `constructor`\
-![](./images/xss1.png)
+![](./images/xss2.png)
 `"a".constructor.constructor(alert(1))` is like `Function(alert(1))`\
 At this point we could use the slash `/` to comment out the remaining part, but the regex filters the `/` character and after some research I found a javascript operator called nullish coalescing (`??`) operator \
 So the payload becomes: 
